@@ -1,0 +1,45 @@
+on:
+  pull_request:
+      branches:
+        - develop
+        - master
+  push:
+    branches:
+      - develop
+      - master
+      - main
+
+
+
+env:
+  JAVA_VERSION: "12.x"
+  FLUTTER_VERSION: "3.0.1"
+  FLUTTER_CHANNEL: "stable"
+  PROPERTIES_PATH: "./android/key.properties"
+
+#step 2 configurations...
+name: "Build & Release"
+jobs:
+  flutter_test:
+    name: Build & Release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-java@v1
+        with:
+          java-version: ${{env.JAVA_VERSION}}
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: ${{env.FLUTTER_CHANNEL}}
+          flutter-version: ${{env.FLUTTER_VERSION}}
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter build apk --debug --split-per-abi
+      - name: Push to Releases
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/apk/debug/*"
+          tag: v1.0.${{ github.run_number }}
+          token: ${{ secrets.TOKEN }}
+      
+      
